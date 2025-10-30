@@ -1,52 +1,33 @@
-import { load } from 'cheerio';   
+// app/lib/seo.ts
+import { load } from 'cheerio';
 
 export interface RankMathHead {
   head: string;
 }
 
 
-const USE_REAL_RANKMATH = false;                                   
-const MOCK_API_URL = 'https://mocki.io/v1/8c4fdf75-2203-4ddf-90f7-284959ef27fe'; 
-
-
+const MOCK_MAP: Record<string, string> = {
+  home: 'https://mocki.io/v1/8c4fdf75-2203-4ddf-90f7-284959ef27fe', 
+  features: 'https://mocki.io/v1/8c4fdf75-2203-4ddf-90f7-284959ef27fe',
+  pricing: 'https://mocki.io/v1/4bae5d1a-0efb-4330-8474-8ba64bc5a2db', 
+  about: 'https://mocki.io/v1/7762222e-b9d1-4aba-978a-308592eca7ac',
+};
 
 export async function getRankMathSEO(url: string): Promise<RankMathHead> {
   const path = new URL(url).pathname.slice(1) || 'home';
 
+  const endpoint = MOCK_MAP[path] ?? MOCK_MAP['home'];
 
-  if (USE_REAL_RANKMATH) {
-    const wpUrl = process.env.WORDPRESS_URL!;
-    const apiUrl = `${wpUrl}/wp-json/rankmath/v1/getHead?url=${encodeURIComponent(url)}`;
-
-    try {
-      const res = await fetch(apiUrl, {
-        next: { revalidate: 3600 },
-        headers: { 'User-Agent': 'HelloBooksBot/1.0' },
-      });
-
-      if (!res.ok && res.status !== 429) {
-        throw new Error(`RankMath API ${res.status}`);
-      }
-      if (res.ok) return await res.json();
-    } catch (e) {
-      console.warn('Real RankMath failed → fallback', e);
-    }
-  }
-
-
-  const endpoint = `${MOCK_API_URL}/${path}.json`;
   try {
     const res = await fetch(endpoint, { next: { revalidate: 3600 } });
-    if (!res.ok) throw new Error(`Mock ${res.status}`);
+    if (!res.ok) throw new Error(`Mock API ${res.status}`);
     const data = await res.json();
-    if (!data.head) throw new Error('Missing head field');
+    if (!data.head) throw new Error('Missing head field in mock response');
     return { head: data.head };
   } catch (e) {
     console.warn('Mock fetch failed → fallback', e);
+    return { head: generateFallbackHead(url) };
   }
-
-
-  return { head: generateFallbackHead(url) };
 }
 
 function generateFallbackHead(url: string): string {
@@ -78,9 +59,8 @@ function generateFallbackHead(url: string): string {
   `.trim();
 }
 
-
 export function parseHeadHTML(headHTML: string) {
-  const $ = load(headHTML);   
+  const $ = load(headHTML);
   const get = (selector: string, attr = 'content') => $(selector).attr(attr) ?? '';
 
   return {
@@ -93,9 +73,5 @@ export function parseHeadHTML(headHTML: string) {
     twitterDesc: get('meta[name="twitter:description"]'),
     twitterImage: get('meta[name="twitter:image"]'),
     canonical: $('link[rel="canonical"]').attr('href') ?? '',
-    robots: {
-      index: !headHTML.includes('noindex'),
-      follow: !headHTML.includes('nofollow'),
-    },
   };
 }
