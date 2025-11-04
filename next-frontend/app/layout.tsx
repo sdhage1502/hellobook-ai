@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://hellobooks.ai'),
   title: {
-    default: 'HelloBooks.ai - AI-Powered Bookkeeping Software',
+    default: 'Default Title - HelloBooks.ai  - AI-Powered Bookkeeping Software',
     template: '%s | HelloBooks.ai',
   },
   description: 'Automate your accounting with AI. Invoicing, payments, reports – all smarter and faster.',
