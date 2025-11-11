@@ -31,7 +31,7 @@ export const Header = () => {
             <FeaturesDropdown />
             <ExperiencesDropdown />
             <IndustriesDropdown />
-            <span onClick={() => window.location.href = "/blogs"} className="cursor-pointer">Blogs</span>
+            <span onClick={() => window.location.href = "/blogs"} className="cursor-pointer onhover:text-black">Blogs</span>
             <ResourcesDropdown />
           </nav>
 

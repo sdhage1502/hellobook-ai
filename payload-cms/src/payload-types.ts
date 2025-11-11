@@ -148,6 +148,10 @@ export interface User {
 export interface Media {
   id: string;
   alt: string;
+  /**
+   * Paste an external image URL to use instead of uploading a file
+   */
+  externalUrl?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -161,15 +165,29 @@ export interface Media {
   focalY?: number | null;
 }
 /**
+ * Manage your blog posts with advanced editing features
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "blogs".
  */
 export interface Blog {
   id: string;
+  /**
+   * The main title of your blog post
+   */
   title: string;
+  /**
+   * URL-friendly version of the title (e.g., my-blog-post)
+   */
   slug: string;
+  /**
+   * A brief summary of your blog post (recommended 150-160 characters)
+   */
   excerpt?: string | null;
-  content?: {
+  /**
+   * Main content of your blog post with rich formatting options
+   */
+  content: {
     root: {
       type: string;
       children: {
@@ -183,21 +201,82 @@ export interface Blog {
       version: number;
     };
     [k: string]: unknown;
-  } | null;
-  featuredImage?: (string | null) | Media;
-  meta?: {
-    title?: string | null;
-    description?: string | null;
-    canonical?: string | null;
-    ogImage?: (string | null) | Media;
   };
+  /**
+   * Main image for the blog post (recommended: 1200x630px)
+   */
+  featuredImage?: (string | null) | Media;
+  /**
+   * Add frequently asked questions and answers related to this blog post
+   */
+  faq?:
+    | {
+        /**
+         * The question
+         */
+        question: string;
+        /**
+         * The answer to the question (supports rich text formatting)
+         */
+        answer: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        };
+        id?: string | null;
+      }[]
+  
+  meta?: {
+   
+    title?: string | null;
+        description?: string | null;
+       keywords?:
+      | {
+          keyword: string;
+          id?: string | null;
+        }[]
+      | null;
+   
+    canonical?: string | null;
+   
+    ogImage?: (string | null) | Media;
+   
+    robotsIndex?: boolean | null;
+    
+    robotsFollow?: boolean | null;
+  };
+
+  publishedAt?: string | null;
+  
+  author?: (string | null) | User;
+ 
+  categories?:
+    | {
+        category: string;
+        id?: string | null;
+      }[]
+    | null;
+  
+  tags?:
+    | {
+        tag: string;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "payload-kv".
- */
+
 export interface PayloadKv {
   id: string;
   key: string;
@@ -211,10 +290,7 @@ export interface PayloadKv {
     | boolean
     | null;
 }
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "payload-locked-documents".
- */
+
 export interface PayloadLockedDocument {
   id: string;
   document?:
@@ -238,10 +314,7 @@ export interface PayloadLockedDocument {
   updatedAt: string;
   createdAt: string;
 }
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "payload-preferences".
- */
+
 export interface PayloadPreference {
   id: string;
   user: {
@@ -261,10 +334,7 @@ export interface PayloadPreference {
   updatedAt: string;
   createdAt: string;
 }
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "payload-migrations".
- */
+
 export interface PayloadMigration {
   id: string;
   name?: string | null;
@@ -272,10 +342,7 @@ export interface PayloadMigration {
   updatedAt: string;
   createdAt: string;
 }
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users_select".
- */
+
 export interface UsersSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
@@ -294,12 +361,10 @@ export interface UsersSelect<T extends boolean = true> {
         expiresAt?: T;
       };
 }
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media_select".
- */
+
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  externalUrl?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -312,31 +377,54 @@ export interface MediaSelect<T extends boolean = true> {
   focalX?: T;
   focalY?: T;
 }
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "blogs_select".
- */
+
 export interface BlogsSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
   excerpt?: T;
   content?: T;
   featuredImage?: T;
+  faq?:
+    | T
+    | {
+        question?: T;
+        answer?: T;
+        id?: T;
+      };
   meta?:
     | T
     | {
         title?: T;
         description?: T;
+        keywords?:
+          | T
+          | {
+              keyword?: T;
+              id?: T;
+            };
         canonical?: T;
         ogImage?: T;
+        robotsIndex?: T;
+        robotsFollow?: T;
+      };
+  publishedAt?: T;
+  author?: T;
+  categories?:
+    | T
+    | {
+        category?: T;
+        id?: T;
+      };
+  tags?:
+    | T
+    | {
+        tag?: T;
+        id?: T;
       };
   updatedAt?: T;
   createdAt?: T;
 }
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "payload-kv_select".
- */
+
 export interface PayloadKvSelect<T extends boolean = true> {
   key?: T;
   data?: T;
@@ -375,13 +463,35 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "auth".
+ * via the `definition` "CustomButtonBlock".
  */
+export interface CustomButtonBlock {
+ 
+  buttonText: string;
+
+  buttonLink: string;
+
+  buttonStyle: 'primary' | 'secondary' | 'outline' | 'ghost';
+
+  openInNewTab?: boolean | null;
+  buttonSize?: ('small' | 'medium' | 'large') | null;
+  alignment?: ('left' | 'center' | 'right') | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'customButton';
+}
+
+export interface CalloutBlock {
+ 
+  content: string;
+  type: 'info' | 'warning' | 'success' | 'error';
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'callout';
+}
 export interface Auth {
   [k: string]: unknown;
 }
-
-
 declare module 'payload' {
   export interface GeneratedTypes extends Config {}
 }
