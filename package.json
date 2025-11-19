@@ -1,8 +1,0 @@
-{
-  "name": "next-payload-monorepo",
-  "private": true,
-  "workspaces": [
-    "apps/nextjs",
-    "apps/payload"
-  ]
-}
