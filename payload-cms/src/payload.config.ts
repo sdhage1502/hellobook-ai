@@ -1,15 +1,12 @@
 import { mongooseAdapter } from '@payloadcms/db-mongodb'
 import { payloadCloudPlugin } from '@payloadcms/payload-cloud'
-import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { lexicalEditor, HeadingFeature } from '@payloadcms/richtext-lexical'
 import path from 'path'
 import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
-import { s3Storage } from '@payloadcms/storage-s3'
-import '@nhayhoc/payloadcms-lexical-ext/client/client.css'
+import { azureStorage } from '@payloadcms/storage-azure'
 import { TextColorFeature, HighlightColorFeature } from '@nhayhoc/payloadcms-lexical-ext'
-
-
 
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
@@ -22,8 +19,10 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 export default buildConfig({
+  serverURL: process.env.NEXT_PUBLIC_SITE_URL,
+
   admin: {
-    user: Users.slug,
+    user: (Users && Users.slug) || 'users',
     importMap: {
       baseDir: path.resolve(dirname),
     // meta: {
@@ -38,6 +37,9 @@ export default buildConfig({
     features: ({ defaultFeatures }) => {
       return [
         ...defaultFeatures,
+        HeadingFeature({
+          enabledHeadingSizes: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+        }),
         TextColorFeature({
           colors: [
             { type: 'button', label: 'Red', color: '#dc2626' },
@@ -66,42 +68,41 @@ export default buildConfig({
     },
   }),
   secret: process.env.PAYLOAD_SECRET || '',
-  typescript: {
-    outputFile: path.resolve(dirname, 'payload-types.ts'),
-  },
   db: mongooseAdapter({
     url: process.env.DATABASE_URI || '',
   }),
+
   sharp,
+
   plugins: [
     payloadCloudPlugin(),
-    s3Storage({
-      collections: {
-        media: {
-          prefix: 'media',
-          disableLocalStorage: true,
-          generateFileURL: ({ filename, prefix }) => {
-            return `https://${process.env.S3_BUCKET}.s3.${process.env.S3_REGION}.amazonaws.com/${prefix}/${filename}`
-          },
-        },
-      },
-      bucket: process.env.S3_BUCKET || '',
-      config: {
-        credentials: {
-          accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
-          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
-        },
-        region: process.env.S3_REGION || '',
-        // Optional: Add endpoint for non-AWS S3-compatible services
-        // endpoint: process.env.S3_ENDPOINT,
-      },
-    }),
+
+
+    ...(process.env.AZURE_STORAGE_CONNECTION_STRING
+      ? [
+          azureStorage({
+            collections: { media: true },
+            allowContainerCreate:
+              process.env.AZURE_STORAGE_ALLOW_CONTAINER_CREATE === 'true',
+            baseURL: process.env.AZURE_STORAGE_ACCOUNT_BASEURL || '',
+            connectionString: process.env.AZURE_STORAGE_CONNECTION_STRING,
+            containerName: process.env.AZURE_STORAGE_CONTAINER_NAME || 'media',
+            clientUploads:
+              process.env.AZURE_STORAGE_CLIENT_UPLOADS === 'true',
+           
+          }),
+        ]
+      : []),
   ],
-  // CORS configuration for API access
+
+  typescript: {
+    outputFile: path.resolve(dirname, 'payload-types.ts'),
+  },
+
   cors: [
     process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
-  ].filter(Boolean),
+  ],
   csrf: [
     process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
-  ].filter(Boolean),
-})
+  ],
+});

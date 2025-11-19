@@ -70,6 +70,9 @@ export interface Config {
     users: User;
     media: Media;
     blogs: Blog;
+    'internal-links': InternalLink;
+    'seo-pages': SeoPage;
+    'seo-images': SeoImage;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -80,6 +83,9 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     blogs: BlogsSelect<false> | BlogsSelect<true>;
+    'internal-links': InternalLinksSelect<false> | InternalLinksSelect<true>;
+    'seo-pages': SeoPagesSelect<false> | SeoPagesSelect<true>;
+    'seo-images': SeoImagesSelect<false> | SeoImagesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -149,7 +155,7 @@ export interface Media {
   id: string;
   alt: string;
   /**
-   * Paste an external image URL to use instead of uploading a file
+   * Use external CDN URL instead of upload
    */
   externalUrl?: string | null;
   updatedAt: string;
@@ -165,7 +171,7 @@ export interface Media {
   focalY?: number | null;
 }
 /**
- * Manage your blog posts with advanced editing features
+ * Manage blog posts with SEO optimization
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "blogs".
@@ -173,21 +179,18 @@ export interface Media {
 export interface Blog {
   id: string;
   /**
-   * The main title of your blog post
+   * Main blog title (50-60 characters recommended)
    */
   title: string;
   /**
-   * URL-friendly version of the title (e.g., my-blog-post)
+   * URL-friendly slug (auto-generated from title)
    */
   slug: string;
   /**
-   * A brief summary of your blog post (recommended 150-160 characters)
+   * Brief summary (150-160 characters)
    */
   excerpt?: string | null;
-  /**
-   * Main content of your blog post with rich formatting options
-   */
-  content: {
+  content?: {
     root: {
       type: string;
       children: {
@@ -201,23 +204,17 @@ export interface Blog {
       version: number;
     };
     [k: string]: unknown;
-  };
+  } | null;
   /**
-   * Main image for the blog post (recommended: 1200x630px)
+   * Featured image (1200x630px recommended)
    */
   featuredImage?: (string | null) | Media;
   /**
-   * Add frequently asked questions and answers related to this blog post
+   * FAQs for featured snippets
    */
   faq?:
     | {
-        /**
-         * The question
-         */
         question: string;
-        /**
-         * The answer to the question (supports rich text formatting)
-         */
         answer: {
           root: {
             type: string;
@@ -235,48 +232,259 @@ export interface Blog {
         };
         id?: string | null;
       }[]
-  
+    | null;
+  /**
+   * Override global SEO settings for this post
+   */
   meta?: {
-   
+    /**
+     * SEO title (leave blank to use post title)
+     */
     title?: string | null;
-        description?: string | null;
-       keywords?:
+    /**
+     * Meta description (leave blank to use excerpt)
+     */
+    description?: string | null;
+    /**
+     * Target keywords (3-5 recommended)
+     */
+    keywords?:
       | {
           keyword: string;
           id?: string | null;
         }[]
       | null;
-   
+    /**
+     * Canonical URL (optional)
+     */
     canonical?: string | null;
-   
+    /**
+     * Social media image (uses featured image if blank)
+     */
     ogImage?: (string | null) | Media;
-   
     robotsIndex?: boolean | null;
-    
     robotsFollow?: boolean | null;
   };
-
   publishedAt?: string | null;
-  
   author?: (string | null) | User;
- 
   categories?:
     | {
         category: string;
         id?: string | null;
       }[]
     | null;
-  
   tags?:
     | {
         tag: string;
         id?: string | null;
       }[]
     | null;
+  /**
+   * Auto-calculated reading time (minutes)
+   */
+  readingTime?: number | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Automated internal linking for SEO
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "internal-links".
+ */
+export interface InternalLink {
+  id: string;
+  /**
+   * Domain (multi-site)
+   */
+  site: string;
+  /**
+   * Keyword/phrase to link
+   */
+  keyword: string;
+  /**
+   * Target URL (e.g., /blogs/nextjs-guide)
+   */
+  target_url: string;
+  /**
+   * Tooltip (optional)
+   */
+  title?: string | null;
+  /**
+   * rel="nofollow"
+   */
+  nofollow?: boolean | null;
+  /**
+   * Higher = first (0-100)
+   */
+  priority?: number | null;
+  /**
+   * Max links per page (1-3 recommended)
+   */
+  max_links_per_page?: number | null;
+  /**
+   * Match type
+   */
+  match_type: 'word' | 'phrase' | 'regex';
+  /**
+   * Enable rule
+   */
+  isActive?: boolean | null;
+  /**
+   * Notes
+   */
+  notes?: string | null;
   updatedAt: string;
   createdAt: string;
 }
-
+/**
+ * Manage SEO metadata for all website pages
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "seo-pages".
+ */
+export interface SeoPage {
+  id: string;
+  /**
+   * Domain name (for multi-site management)
+   */
+  site: string;
+  /**
+   * Page URL path (e.g., /, /about, /blogs, /blogs/my-post)
+   */
+  slug: string;
+  /**
+   * SEO title (50-60 characters recommended)
+   */
+  metaTitle?: string | null;
+  /**
+   * Meta description (150-160 characters recommended)
+   */
+  metaDescription?: string | null;
+  /**
+   * Target keywords for this page (5-10 recommended)
+   */
+  keywords?:
+    | {
+        keyword: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Canonical URL (prevents duplicate content issues)
+   */
+  canonical?: string | null;
+  /**
+   * How this page appears when shared on social media
+   */
+  openGraph?: {
+    /**
+     * Social media title (can differ from meta title)
+     */
+    ogTitle?: string | null;
+    /**
+     * Social media description
+     */
+    ogDescription?: string | null;
+    /**
+     * Social media image (1200x630px recommended)
+     */
+    ogImage?: (string | null) | Media;
+  };
+  /**
+   * Control how search engines crawl and index this page
+   */
+  robots?: {
+    /**
+     * Allow search engines to index this page
+     */
+    index?: boolean | null;
+    /**
+     * Allow search engines to follow links on this page
+     */
+    follow?: boolean | null;
+  };
+  /**
+   * Additional structured data for rich snippets (advanced)
+   */
+  schema_json?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Optimize images for SEO/social
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "seo-images".
+ */
+export interface SeoImage {
+  id: string;
+  /**
+   * Domain
+   */
+  site: string;
+  /**
+   * Page slug (e.g., /blogs/tech)
+   */
+  page_slug: string;
+  /**
+   * Upload image
+   */
+  image?: (string | null) | Media;
+  /**
+   * Direct URL (override)
+   */
+  image_url?: string | null;
+  /**
+   * Alt text (descriptive, keywords)
+   */
+  alt_text?: string | null;
+  /**
+   * Caption
+   */
+  caption?: string | null;
+  /**
+   * Keywords for image
+   */
+  tags?:
+    | {
+        tag?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Purpose
+   */
+  imageType?: ('featured' | 'content' | 'og' | 'product' | 'other') | null;
+  /**
+   * Px sizes
+   */
+  dimensions?: {
+    /**
+     * Width
+     */
+    width?: number | null;
+    /**
+     * Height
+     */
+    height?: number | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-kv".
+ */
 export interface PayloadKv {
   id: string;
   key: string;
@@ -290,7 +498,10 @@ export interface PayloadKv {
     | boolean
     | null;
 }
-
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-locked-documents".
+ */
 export interface PayloadLockedDocument {
   id: string;
   document?:
@@ -305,6 +516,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'blogs';
         value: string | Blog;
+      } | null)
+    | ({
+        relationTo: 'internal-links';
+        value: string | InternalLink;
+      } | null)
+    | ({
+        relationTo: 'seo-pages';
+        value: string | SeoPage;
+      } | null)
+    | ({
+        relationTo: 'seo-images';
+        value: string | SeoImage;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -314,7 +537,10 @@ export interface PayloadLockedDocument {
   updatedAt: string;
   createdAt: string;
 }
-
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-preferences".
+ */
 export interface PayloadPreference {
   id: string;
   user: {
@@ -334,7 +560,10 @@ export interface PayloadPreference {
   updatedAt: string;
   createdAt: string;
 }
-
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-migrations".
+ */
 export interface PayloadMigration {
   id: string;
   name?: string | null;
@@ -342,7 +571,10 @@ export interface PayloadMigration {
   updatedAt: string;
   createdAt: string;
 }
-
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users_select".
+ */
 export interface UsersSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
@@ -361,7 +593,10 @@ export interface UsersSelect<T extends boolean = true> {
         expiresAt?: T;
       };
 }
-
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media_select".
+ */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
   externalUrl?: T;
@@ -377,7 +612,10 @@ export interface MediaSelect<T extends boolean = true> {
   focalX?: T;
   focalY?: T;
 }
-
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "blogs_select".
+ */
 export interface BlogsSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
@@ -421,10 +659,93 @@ export interface BlogsSelect<T extends boolean = true> {
         tag?: T;
         id?: T;
       };
+  readingTime?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "internal-links_select".
+ */
+export interface InternalLinksSelect<T extends boolean = true> {
+  site?: T;
+  keyword?: T;
+  target_url?: T;
+  title?: T;
+  nofollow?: T;
+  priority?: T;
+  max_links_per_page?: T;
+  match_type?: T;
+  isActive?: T;
+  notes?: T;
   updatedAt?: T;
   createdAt?: T;
 }
-
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "seo-pages_select".
+ */
+export interface SeoPagesSelect<T extends boolean = true> {
+  site?: T;
+  slug?: T;
+  metaTitle?: T;
+  metaDescription?: T;
+  keywords?:
+    | T
+    | {
+        keyword?: T;
+        id?: T;
+      };
+  canonical?: T;
+  openGraph?:
+    | T
+    | {
+        ogTitle?: T;
+        ogDescription?: T;
+        ogImage?: T;
+      };
+  robots?:
+    | T
+    | {
+        index?: T;
+        follow?: T;
+      };
+  schema_json?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "seo-images_select".
+ */
+export interface SeoImagesSelect<T extends boolean = true> {
+  site?: T;
+  page_slug?: T;
+  image?: T;
+  image_url?: T;
+  alt_text?: T;
+  caption?: T;
+  tags?:
+    | T
+    | {
+        tag?: T;
+        id?: T;
+      };
+  imageType?: T;
+  dimensions?:
+    | T
+    | {
+        width?: T;
+        height?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-kv_select".
+ */
 export interface PayloadKvSelect<T extends boolean = true> {
   key?: T;
   data?: T;
@@ -466,13 +787,9 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
  * via the `definition` "CustomButtonBlock".
  */
 export interface CustomButtonBlock {
- 
-  buttonText: string;
-
-  buttonLink: string;
-
+  buttonText?: string | null;
+  buttonLink?: string | null;
   buttonStyle: 'primary' | 'secondary' | 'outline' | 'ghost';
-
   openInNewTab?: boolean | null;
   buttonSize?: ('small' | 'medium' | 'large') | null;
   alignment?: ('left' | 'center' | 'right') | null;
@@ -480,18 +797,26 @@ export interface CustomButtonBlock {
   blockName?: string | null;
   blockType: 'customButton';
 }
-
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CalloutBlock".
+ */
 export interface CalloutBlock {
- 
-  content: string;
+  content?: string | null;
   type: 'info' | 'warning' | 'success' | 'error';
   id?: string | null;
   blockName?: string | null;
   blockType: 'callout';
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "auth".
+ */
 export interface Auth {
   [k: string]: unknown;
 }
+
+
 declare module 'payload' {
   export interface GeneratedTypes extends Config {}
 }

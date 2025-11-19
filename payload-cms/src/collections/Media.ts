@@ -1,10 +1,28 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig } from 'payload';
 
 export const Media: CollectionConfig = {
   slug: 'media',
-  access: {
-    read: () => true,
+
+  admin: {
+    useAsTitle: 'filename',
+    group: 'Media',
+    defaultColumns: ['filename', 'url'],
   },
+
+  access: { read: () => true },
+
+  upload: {
+    staticDir: 'media',
+
+    pasteURL: {
+      allowList: [
+        { hostname: 'images.unsplash.com', protocol: 'https' },
+        { hostname: 'unsplash.com', protocol: 'https' },
+        { hostname: 'your-cdn-domain.com', protocol: 'https' },
+      ],
+    },
+  },
+
   fields: [
     {
       name: 'alt',
@@ -16,32 +34,11 @@ export const Media: CollectionConfig = {
       type: 'text',
       label: 'External Image URL',
       admin: {
-        description: 'Paste an external image URL to use instead of uploading a file',
+        description: 'Use external CDN URL instead of upload',
         condition: (data) => !data.filename,
       },
     },
   ],
-  upload: {
-    pasteURL: {
-      allowList: [
-        {
-          hostname: 'payloadcms.com',
-          protocol: 'https',
-        },
-        {
-          hostname: 'unsplash.com',
-          protocol: 'https',
-        },
-        {
-          hostname: 'images.unsplash.com',
-          protocol: 'https',
-        },
-        {
-          hostname: 'your-cdn-domain.com',
-          protocol: 'https',
-        },
-      ],
-    },
-  },
-}
+};
 
+export default Media;

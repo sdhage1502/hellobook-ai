@@ -2,9 +2,11 @@
 /* DO NOT MODIFY IT BECAUSE IT COULD BE REWRITTEN AT ANY TIME. */
 import config from '@payload-config'
 import '@payloadcms/next/css'
+import '@nhayhoc/payloadcms-lexical-ext/client/client.css'
 import type { ServerFunctionClient } from 'payload'
 import { handleServerFunctions, RootLayout } from '@payloadcms/next/layouts'
 import React from 'react'
+import Script from 'next/script'
 
 import { importMap } from './admin/importMap.js'
 import './custom.scss'
@@ -24,6 +26,23 @@ const serverFunction: ServerFunctionClient = async function (args) {
 
 const Layout = ({ children }: Args) => (
   <RootLayout config={config} importMap={importMap} serverFunction={serverFunction}>
+    {/* Suppress hydration warnings for Tailwind CSS v4 style injection differences */}
+    <Script
+      id="suppress-hydration"
+      strategy="beforeInteractive"
+      dangerouslySetInnerHTML={{
+        __html: `
+          (function() {
+            if (typeof document !== 'undefined') {
+              const htmlElement = document.documentElement;
+              if (htmlElement) {
+                htmlElement.setAttribute('suppress-hydration-warning', 'true');
+              }
+            }
+          })();
+        `,
+      }}
+    />
     {children}
   </RootLayout>
 )

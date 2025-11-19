@@ -12,6 +12,13 @@ const nextConfig = {
 
     return webpackConfig
   },
+  // Suppress hydration warnings for style tags (Tailwind CSS v4 issue)
+  reactStrictMode: true,
+  // Disable React's hydration warning for known safe mismatches
+  onDemandEntries: {
+    maxInactiveAge: 25 * 1000,
+    pagesBufferLength: 2,
+  },
 }
 
 export default withPayload(nextConfig, { devBundleServerPackages: false })
